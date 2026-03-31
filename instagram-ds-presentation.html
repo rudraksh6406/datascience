@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Instagram &amp; Data Science — Rudraksh Dubey</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap');
+
+  :root {
+    --bg:#fff;--bg2:#fafafa;--card:#fff;--text:#262626;--text2:#8e8e8e;
+    --border:#efefef;--accent:#0095f6;--heart:#ed4956;--nav:#ffffffee;
+    --tag-bg:#e8f0fe;--tag-text:#1a73e8;--glass:rgba(255,255,255,.06);
+  }
+  .dark {
+    --bg:#000;--bg2:#0a0a0a;--card:#111;--text:#f5f5f5;--text2:#888;
+    --border:#222;--nav:#000000ee;--tag-bg:#1e3a5f;--tag-text:#7cb9f7;
+    --glass:rgba(255,255,255,.04);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    background:var(--bg2);color:var(--text);
+    display:flex;justify-content:center;min-height:100vh;transition:all .35s;
+  }
+
+  /* PHONE */
+  .phone{
+    width:100%;max-width:440px;min-height:100vh;background:var(--bg);
+    position:relative;display:flex;flex-direction:column;
+    box-shadow:0 0 80px rgba(0,0,0,.06);overflow:hidden;transition:all .35s;
+  }
+
+  /* NAV */
+  .topnav{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 18px;background:var(--nav);backdrop-filter:blur(20px);
+    border-bottom:1px solid var(--border);
+    position:sticky;top:0;z-index:100;transition:all .35s;
+  }
+  .ig-logo{
+    font-family:'Playfair Display',Georgia,serif;font-size:26px;font-weight:800;
+    font-style:italic;
+    background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  }
+  .nav-r{display:flex;gap:14px;align-items:center}
+  .nav-r button{background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center}
+  .nav-r svg{width:24px;height:24px;fill:var(--text);transition:fill .3s}
+  .counter{
+    font-size:11px;font-weight:700;color:#fff;
+    background:linear-gradient(135deg,#833ab4,#dc2743,#fcb045);
+    padding:4px 12px;border-radius:14px;
+    box-shadow:0 2px 8px rgba(220,39,67,.3);
+  }
+
+  /* PROGRESS */
+  .prog-wrap{height:3px;background:var(--border);position:sticky;top:60px;z-index:99;transition:background .3s}
+  .prog-fill{height:100%;border-radius:0 3px 3px 0;background:linear-gradient(90deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);transition:width .5s cubic-bezier(.4,0,.2,1)}
+
+  /* FEED */
+  .feed{flex:1;overflow-y:auto;padding-bottom:80px;scroll-behavior:smooth}
+  .feed::-webkit-scrollbar{width:0}
+
+  /* POST */
+  .post{
+    background:var(--card);border-bottom:1px solid var(--border);
+    transition:all .35s;
+    opacity:0;transform:translateY(60px) scale(.97);
+    transition:opacity .7s cubic-bezier(.4,0,.2,1),transform .7s cubic-bezier(.4,0,.2,1);
+  }
+  .post.visible{opacity:1;transform:translateY(0) scale(1)}
+  .post-head{display:flex;align-items:center;padding:14px 18px;gap:12px}
+  .post-av{
+    width:40px;height:40px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:16px;color:#fff;flex-shrink:0;
+    box-shadow:0 3px 12px rgba(0,0,0,.15);
+  }
+  .post-info{flex:1}
+  .post-user{font-weight:700;font-size:14px;letter-spacing:-.2px}
+  .post-sub{font-size:11px;color:var(--text2);margin-top:1px}
+  .post-badge{
+    font-size:10px;font-weight:800;letter-spacing:.8px;
+    background:linear-gradient(135deg,#667eea,#764ba2);
+    color:#fff;padding:4px 12px;border-radius:12px;text-transform:uppercase;
+    box-shadow:0 2px 8px rgba(118,75,162,.3);
+  }
+
+  /* SLIDE */
+  .slide{
+    width:100%;aspect-ratio:4/5;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    padding:36px 26px;position:relative;overflow:hidden;
+  }
+  .slide>*{position:relative;z-index:3}
+  /* Animated mesh gradient overlay */
+  .slide::before{
+    content:'';position:absolute;inset:-50%;width:200%;height:200%;
+    background:radial-gradient(circle at 20% 30%,rgba(255,255,255,.08) 0%,transparent 50%),
+               radial-gradient(circle at 80% 70%,rgba(255,255,255,.05) 0%,transparent 40%),
+               radial-gradient(circle at 50% 50%,rgba(255,255,255,.03) 0%,transparent 60%);
+    animation:meshFloat 12s ease-in-out infinite;z-index:1;
+  }
+  @keyframes meshFloat{
+    0%,100%{transform:translate(0,0) rotate(0deg)}
+    33%{transform:translate(3%,-3%) rotate(1deg)}
+    66%{transform:translate(-2%,2%) rotate(-1deg)}
+  }
+  /* Floating particles */
+  .slide::after{
+    content:'';position:absolute;inset:0;z-index:2;
+    background-image:
+      radial-gradient(1.5px 1.5px at 10% 20%,rgba(255,255,255,.25),transparent),
+      radial-gradient(1px 1px at 30% 60%,rgba(255,255,255,.15),transparent),
+      radial-gradient(1.5px 1.5px at 50% 10%,rgba(255,255,255,.2),transparent),
+      radial-gradient(1px 1px at 70% 80%,rgba(255,255,255,.12),transparent),
+      radial-gradient(1.5px 1.5px at 90% 40%,rgba(255,255,255,.18),transparent),
+      radial-gradient(1px 1px at 15% 85%,rgba(255,255,255,.1),transparent),
+      radial-gradient(1.5px 1.5px at 85% 15%,rgba(255,255,255,.15),transparent),
+      radial-gradient(1px 1px at 60% 45%,rgba(255,255,255,.08),transparent);
+    animation:sparkle 8s ease-in-out infinite alternate;
+  }
+  @keyframes sparkle{0%{opacity:.6}100%{opacity:1}}
+
+  /* Slide number watermark */
+  .slide-num{
+    position:absolute;top:18px;right:20px;
+    font-size:72px;font-weight:900;color:rgba(255,255,255,.06);
+    font-family:'Playfair Display',serif;line-height:1;z-index:2;
+    letter-spacing:-3px;
+  }
+
+  /* Typography */
+  .slide .icon{font-size:52px;margin-bottom:12px;filter:drop-shadow(0 6px 20px rgba(0,0,0,.35))}
+  .slide .title{
+    font-family:'Playfair Display',Georgia,serif;
+    font-size:28px;font-weight:800;color:#fff;text-align:center;
+    margin-bottom:6px;text-shadow:0 3px 16px rgba(0,0,0,.35);line-height:1.15;
+    letter-spacing:-.5px;
+  }
+  .slide .sub{
+    font-size:11px;font-weight:700;text-transform:uppercase;
+    letter-spacing:3px;color:rgba(255,255,255,.5);margin-bottom:20px;
+  }
+  .slide .body{font-size:14px;line-height:1.7;color:rgba(255,255,255,.88);text-align:center;max-width:360px}
+  .slide .body strong{color:#fff}
+
+  /* GLASS CARD */
+  .gc{
+    background:rgba(255,255,255,.08);backdrop-filter:blur(16px);
+    border:1px solid rgba(255,255,255,.1);border-radius:18px;
+    padding:18px 20px;width:100%;max-width:360px;
+    margin:6px 0;text-align:left;color:rgba(255,255,255,.9);
+    transition:transform .2s;
+  }
+  .gc:hover{transform:translateY(-2px)}
+  .gc h4{font-size:15px;font-weight:700;margin-bottom:8px;color:#fff}
+  .gc p,.gc li{font-size:13px;line-height:1.65;color:rgba(255,255,255,.82)}
+  .gc ul{list-style:none;padding:0}
+  .gc ul li{padding:4px 0 4px 20px;position:relative}
+  .gc ul li::before{
+    content:'';position:absolute;left:0;top:12px;
+    width:8px;height:8px;border-radius:50%;
+    background:linear-gradient(135deg,rgba(255,255,255,.5),rgba(255,255,255,.2));
+  }
+
+  /* CODE */
+  .cb{
+    background:rgba(0,0,0,.45);backdrop-filter:blur(12px);
+    border:1px solid rgba(255,255,255,.08);border-radius:14px;
+    padding:16px 18px;font-family:'SF Mono','Fira Code','Consolas',monospace;
+    font-size:12px;color:#e0e0e0;text-align:left;
+    width:100%;max-width:360px;margin:8px 0;line-height:1.65;white-space:pre-wrap;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+  }
+  .cb .kw{color:#c792ea}.cb .fn{color:#82aaff}.cb .str{color:#c3e88d}.cb .cmt{color:#546e7a}.cb .num{color:#f78c6c}
+
+  /* STAT GRID */
+  .sg{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:360px;margin:10px 0}
+  .sb{
+    background:rgba(255,255,255,.08);backdrop-filter:blur(10px);
+    border-radius:16px;padding:18px 12px;text-align:center;
+    border:1px solid rgba(255,255,255,.06);
+    transition:transform .2s;
+  }
+  .sb:hover{transform:translateY(-2px)}
+  .sb .n{font-size:32px;font-weight:900;line-height:1.1;font-family:'Playfair Display',serif}
+  .sb .l{font-size:11px;color:rgba(255,255,255,.55);margin-top:6px;line-height:1.3}
+
+  /* ALERT CARD */
+  .ac{border-radius:0 16px 16px 0;padding:16px 18px;text-align:left;width:100%;max-width:360px;margin:5px 0;transition:transform .2s}
+  .ac:hover{transform:translateX(4px)}
+  .ac h5{font-size:14px;font-weight:700;color:#fff;margin-bottom:5px}
+  .ac p{font-size:12px;color:rgba(255,255,255,.78);line-height:1.55}
+
+  /* TAGS */
+  .tags{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:12px 0;max-width:360px}
+  .tag{
+    background:rgba(255,255,255,.12);backdrop-filter:blur(6px);
+    padding:6px 16px;border-radius:20px;font-size:12px;font-weight:600;color:#fff;
+    border:1px solid rgba(255,255,255,.08);transition:transform .15s,background .15s;
+  }
+  .tag:hover{transform:scale(1.05);background:rgba(255,255,255,.18)}
+
+  /* TEAM CARD */
+  .tc{
+    background:rgba(255,255,255,.1);backdrop-filter:blur(16px);
+    border:1px solid rgba(255,255,255,.12);border-radius:24px;
+    padding:28px 24px;text-align:center;width:220px;
+    box-shadow:0 8px 32px rgba(0,0,0,.15);
+  }
+  .tc .av{
+    width:72px;height:72px;border-radius:50%;margin:0 auto 12px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:30px;font-weight:900;color:#fff;
+    box-shadow:0 4px 20px rgba(0,0,0,.2);
+  }
+  .tc .nm{font-size:16px;font-weight:800;color:#fff;letter-spacing:-.3px}
+  .tc .rl{font-size:12px;color:rgba(255,255,255,.5);margin-top:4px;letter-spacing:.5px}
+
+  /* FLOW STEPS */
+  .fs{display:flex;align-items:flex-start;gap:14px;width:100%;max-width:360px;margin:5px 0;color:rgba(255,255,255,.9)}
+  .fn2{
+    width:30px;height:30px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:13px;font-weight:800;flex-shrink:0;color:#fff;
+    box-shadow:0 2px 8px rgba(0,0,0,.15);
+  }
+  .ft{font-size:13px;line-height:1.55;padding-top:4px}
+  .ft strong{color:#fff}
+
+  /* POST FOOTER */
+  .post-actions{display:flex;align-items:center;padding:12px 18px 8px;gap:18px}
+  .post-actions svg{
+    width:26px;height:26px;cursor:pointer;transition:transform .15s;
+    fill:none;stroke:var(--text);stroke-width:1.8;
+  }
+  .post-actions svg:hover{transform:scale(1.2)}
+  .post-actions svg.liked{fill:var(--heart);stroke:var(--heart)}
+  .post-actions .sp{flex:1}
+  .likes{padding:2px 18px 4px;font-weight:800;font-size:14px;letter-spacing:-.2px}
+  .caption{padding:2px 18px 16px;font-size:13px;line-height:1.6;color:var(--text2)}
+  .caption b{color:var(--text);font-weight:700}
+  .caption .ht{color:var(--accent)}
+
+  /* BOTTOM NAV */
+  .botnav{
+    display:flex;align-items:center;justify-content:space-around;
+    padding:12px 0 28px;background:var(--nav);backdrop-filter:blur(20px);
+    border-top:1px solid var(--border);
+    position:fixed;bottom:0;width:100%;max-width:440px;z-index:100;transition:all .35s;
+  }
+  .botnav svg{width:24px;height:24px;fill:var(--text);transition:fill .3s}
+  .botnav-av{
+    width:28px;height:28px;border-radius:50%;
+    background:linear-gradient(135deg,#667eea,#764ba2);
+    display:flex;align-items:center;justify-content:center;
+    font-size:10px;font-weight:900;color:#fff;
+    box-shadow:0 2px 8px rgba(118,75,162,.3);
+  }
+
+  /* ANIMATIONS */
+  .dbl-heart{position:absolute;font-size:90px;z-index:50;pointer-events:none;animation:hb .9s ease-out forwards}
+  @keyframes hb{0%{opacity:1;transform:scale(.3) rotate(-15deg)}25%{opacity:1;transform:scale(1.2) rotate(5deg)}100%{opacity:0;transform:scale(1.4) translateY(-30px) rotate(0deg)}}
+  @keyframes hp{0%{transform:scale(1)}50%{transform:scale(1.35)}100%{transform:scale(1)}}
+  .heart-pop{animation:hp .35s cubic-bezier(.4,0,.2,1)}
+
+  /* DIVIDER between posts */
+  .post-divider{
+    height:8px;background:var(--bg2);transition:background .35s;
+  }
+
+  @media(max-width:440px){
+    .phone{box-shadow:none}
+    .slide{padding:28px 18px}
+    .slide .title{font-size:24px}
+    .slide-num{font-size:56px}
+  }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="topnav">
+    <div class="ig-logo">DataGram</div>
+    <div class="nav-r">
+      <span class="counter" id="counter">1 / 16</span>
+      <button onclick="toggleTheme()" title="Toggle theme">
+        <svg id="ico-sun" viewBox="0 0 24 24" style="display:none"><path d="M12 3a1 1 0 011 1v1a1 1 0 01-2 0V4a1 1 0 011-1zm0 15a1 1 0 011 1v1a1 1 0 01-2 0v-1a1 1 0 011-1zm9-6a1 1 0 010 2h-1a1 1 0 010-2h1zM5 12a1 1 0 010 2H4a1 1 0 010-2h1zm14.07-6.36a1 1 0 010 1.41l-.71.71a1 1 0 11-1.41-1.41l.71-.71a1 1 0 011.41 0zM7.05 17.66a1 1 0 010 1.41l-.71.71a1 1 0 11-1.41-1.41l.71-.71a1 1 0 011.41 0zM5.64 5.64a1 1 0 011.41 0l.71.71A1 1 0 016.35 7.76l-.71-.71a1 1 0 010-1.41zm12.02 12.02a1 1 0 011.41 0l.71.71a1 1 0 11-1.41 1.41l-.71-.71a1 1 0 010-1.41zM12 8a4 4 0 100 8 4 4 0 000-8z"/></svg>
+        <svg id="ico-moon" viewBox="0 0 24 24"><path d="M21.64 13a1 1 0 00-1.05-.14 8.05 8.05 0 01-3.37.73A8.15 8.15 0 019.08 5.49a8.59 8.59 0 01.25-2 1 1 0 00-1.26-1.26A10 10 0 1021.78 14.05a1 1 0 00-.14-1.05z"/></svg>
+      </button>
+      <button><svg viewBox="0 0 24 24"><path d="M16.792 3.904A4.989 4.989 0 0121.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.865 3.469-4.303 3.752-.477-.309-1.834-1.543-4.303-3.752C5.141 14.072 2.5 12.167 2.5 9.122a4.989 4.989 0 014.708-5.218 4.21 4.21 0 013.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 013.679-1.938z"/></svg></button>
+    </div>
+  </div>
+  <div class="prog-wrap"><div class="prog-fill" id="progress" style="width:0%"></div></div>
+  <div class="feed" id="feed"></div>
+  <div class="botnav">
+    <svg viewBox="0 0 24 24"><path d="M9.005 16.545a2.997 2.997 0 012.997-2.997A2.997 2.997 0 0115 16.545V22H9.005v-5.455zM22 22H15V16.5a3 3 0 00-3-3 3 3 0 00-3 3V22H2V9.744l10-8.328 10 8.328V22z"/></svg>
+    <svg viewBox="0 0 24 24"><path d="M19 10.5A8.5 8.5 0 1010.5 19h6.396a2.61 2.61 0 002.104-4.157V10.5zm-8.5 7a6.5 6.5 0 110-13 6.5 6.5 0 010 13z"/></svg>
+    <svg viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+    <svg viewBox="0 0 24 24"><path d="M12 2.982c2.937 0 3.285.011 4.445.064a6.087 6.087 0 012.042.379 3.408 3.408 0 011.265.823 3.408 3.408 0 01.823 1.265 6.087 6.087 0 01.379 2.042c.053 1.16.064 1.508.064 4.445s-.011 3.285-.064 4.445a6.087 6.087 0 01-.379 2.042 3.643 3.643 0 01-2.088 2.088 6.087 6.087 0 01-2.042.379c-1.16.053-1.508.064-4.445.064s-3.285-.011-4.445-.064a6.087 6.087 0 01-2.042-.379 3.643 3.643 0 01-2.088-2.088 6.087 6.087 0 01-.379-2.042C2.993 15.285 2.982 14.937 2.982 12s.011-3.285.064-4.445a6.087 6.087 0 01.379-2.042A3.408 3.408 0 014.248 4.248a3.408 3.408 0 011.265-.823 6.087 6.087 0 012.042-.379C8.715 2.993 9.063 2.982 12 2.982zM12 1C9.013 1 8.638 1.013 7.465 1.066 6.292 1.119 5.56 1.272 4.78 1.612a5.392 5.392 0 00-1.948 1.27A5.392 5.392 0 001.562 4.83C1.222 5.61 1.079 6.45 1.066 7.465 1.013 8.638 1 9.013 1 12s.013 3.362.066 4.535c.053 1.173.206 1.906.546 2.686a5.392 5.392 0 001.27 1.948 5.392 5.392 0 001.948 1.27c.78.34 1.56.493 2.686.546C8.638 22.987 9.013 23 12 23s3.362-.013 4.535-.066c1.126-.053 1.906-.206 2.686-.546a5.625 5.625 0 003.218-3.218c.34-.78.493-1.56.546-2.686.053-1.173.066-1.548.066-4.535s-.013-3.362-.066-4.535c-.053-1.015-.206-1.855-.546-2.635a5.392 5.392 0 00-1.27-1.948A5.392 5.392 0 0019.22 1.612c-.78-.34-1.56-.493-2.686-.546C15.362 1.013 14.987 1 12 1z"/><circle cx="12" cy="12" r="3.5"/><circle cx="18.5" cy="5.5" r="1.1"/></svg>
+    <div class="botnav-av">RD</div>
+  </div>
+</div>
+
+<script>
+const S=[
+  // 0 COVER
+  {u:"datagram_official",s:"FT3 Activity Presentation",b:"COVER",
+   abg:"linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)",av:"DG",
+   bg:"linear-gradient(135deg,#0f0c29,#302b63 40%,#24243e)",
+   lk:"∞",
+   cap:`<b>datagram_official</b> Welcome to our Data Science presentation on Instagram — built <i>as</i> Instagram. Scroll to explore. <span class="ht">#DataScience #FT3 #Instagram</span>`,
+   h:`<div class="slide-num">01</div>
+      <div class="icon" style="font-size:64px">📸</div>
+      <div class="title" style="font-size:36px;line-height:1.1">Data Science<br>Behind Instagram</div>
+      <div class="sub" style="margin-top:10px">How the Algorithm Keeps 2 Billion Users Hooked</div>
+      <div style="margin-top:28px">
+        <div class="tc">
+          <div class="av" style="background:linear-gradient(135deg,#667eea,#764ba2)">RD</div>
+          <div class="nm">Rudraksh Dubey</div>
+          <div class="rl" style="margin-top:6px;font-weight:600">RA2311004010282</div>
+        </div>
+      </div>
+      <div style="margin-top:22px;font-size:11px;color:rgba(255,255,255,.35);letter-spacing:2px;font-weight:600">FT3 ACTIVITY &bull; 10 MARKS</div>
+      <div style="margin-top:14px;font-size:12px;color:rgba(255,255,255,.25);animation:pulse 2.5s infinite">↓ Scroll to begin</div>`},
+
+  // 1 AGENDA
+  {u:"table_of_contents",s:"Presentation Roadmap",b:"AGENDA",
+   abg:"linear-gradient(135deg,#a18cd1,#fbc2eb)",av:"📋",
+   bg:"linear-gradient(135deg,#1a1a2e,#16213e 50%,#0f3460)",
+   lk:"15,000",
+   cap:`<b>table_of_contents</b> Our roadmap through the full Data Science lifecycle applied to Instagram. <span class="ht">#Agenda</span>`,
+   h:`<div class="slide-num">02</div>
+      <div class="icon">🗺️</div>
+      <div class="title">Presentation Roadmap</div>
+      <div class="sub">What We'll Cover</div>
+      <div style="width:100%;max-width:360px">
+        <div class="fs"><div class="fn2" style="background:linear-gradient(135deg,#667eea,#764ba2)">1</div><div class="ft"><strong>What is Instagram?</strong> — App overview & why it's a DS goldmine</div></div>
+        <div class="fs"><div class="fn2" style="background:linear-gradient(135deg,#f09433,#e6683c)">2</div><div class="ft"><strong>Problem Definition</strong> — The core problem Instagram solves with data</div></div>
+        <div class="fs"><div class="fn2" style="background:linear-gradient(135deg,#f093fb,#f5576c)">3</div><div class="ft"><strong>Data Collection</strong> — What data Instagram gathers & how</div></div>
+        <div class="fs"><div class="fn2" style="background:linear-gradient(135deg,#a8edea,#fed6e3)">4</div><div class="ft"><strong>Data Processing</strong> — Cleaning, transforming & preparing data</div></div>
+        <div class="fs"><div class="fn2" style="background:linear-gradient(135deg,#a18cd1,#fbc2eb)">5</div><div class="ft"><strong>Analysis & Modeling</strong> — EDA, ML models & the algorithm</div></div>
+        <div class="fs"><div class="fn2" style="background:linear-gradient(135deg,#84fab0,#8fd3f4)">6</div><div class="ft"><strong>Deployment & Challenges</strong> — Shipping at scale & ethics</div></div>
+      </div>`},
+
+  // 2 WHAT IS INSTAGRAM
+  {u:"instagram_intro",s:"Application Overview",b:"INTRO",
+   abg:"linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)",av:"📱",
+   bg:"linear-gradient(135deg,#833ab4,#fd1d1d 50%,#fcb045)",
+   lk:"2,400,000,000",
+   cap:`<b>instagram_intro</b> Instagram is a photo & video sharing social network by Meta. 2B+ monthly users make it one of the most data-rich apps on Earth. <span class="ht">#Instagram #Meta</span>`,
+   h:`<div class="slide-num">03</div>
+      <div class="icon">📱</div>
+      <div class="title">What is Instagram?</div>
+      <div class="sub">A Day-to-Day Application</div>
+      <div class="gc"><h4>📸 Photo & Video Sharing Platform</h4><p>A social network where users share photos, videos, Stories, and Reels worldwide. Owned by Meta. Launched 2010 — grew from a simple filter app to a data science powerhouse.</p></div>
+      <div class="sg" style="margin-top:10px">
+        <div class="sb"><div class="n" style="color:#fcb045">2B+</div><div class="l">Monthly Active Users</div></div>
+        <div class="sb"><div class="n" style="color:#fd1d1d">95M+</div><div class="l">Photos Posted Daily</div></div>
+        <div class="sb"><div class="n" style="color:#833ab4">500M</div><div class="l">Daily Stories</div></div>
+        <div class="sb"><div class="n" style="color:#fcb045">4B+</div><div class="l">Likes Per Day</div></div>
+      </div>
+      <p class="body" style="font-size:12px;margin-top:10px">Every action generates data — making Instagram a <strong>massive Data Science laboratory</strong>.</p>`},
+
+  // 3 FEATURES
+  {u:"ig_features",s:"Core Features Powered by Data",b:"FEATURES",
+   abg:"linear-gradient(135deg,#f5af19,#f12711)",av:"⚡",
+   bg:"linear-gradient(135deg,#141e30,#243b55)",
+   lk:"89,412",
+   cap:`<b>ig_features</b> Each feature is its own data pipeline. Feed, Stories, Reels, Explore, Shopping, DMs — all powered by ML behind the scenes. <span class="ht">#Features</span>`,
+   h:`<div class="slide-num">04</div>
+      <div class="icon">⚡</div>
+      <div class="title">Key Features</div>
+      <div class="sub">Each One Powered by Data Science</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:360px">
+        <div class="gc" style="text-align:center;padding:16px"><div style="font-size:30px">🏠</div><h4 style="font-size:13px;margin-top:8px">Home Feed</h4><p style="font-size:11px">ML-ranked post ordering</p></div>
+        <div class="gc" style="text-align:center;padding:16px"><div style="font-size:30px">📖</div><h4 style="font-size:13px;margin-top:8px">Stories</h4><p style="font-size:11px">Ordered by relationship strength</p></div>
+        <div class="gc" style="text-align:center;padding:16px"><div style="font-size:30px">🎬</div><h4 style="font-size:13px;margin-top:8px">Reels</h4><p style="font-size:11px">Recommendation AI discovery</p></div>
+        <div class="gc" style="text-align:center;padding:16px"><div style="font-size:30px">🔍</div><h4 style="font-size:13px;margin-top:8px">Explore</h4><p style="font-size:11px">Non-followed account discovery</p></div>
+        <div class="gc" style="text-align:center;padding:16px"><div style="font-size:30px">🛍️</div><h4 style="font-size:13px;margin-top:8px">Shopping</h4><p style="font-size:11px">Purchase prediction models</p></div>
+        <div class="gc" style="text-align:center;padding:16px"><div style="font-size:30px">💬</div><h4 style="font-size:13px;margin-top:8px">DMs</h4><p style="font-size:11px">Smart replies & share predictions</p></div>
+      </div>`},
+
+  // 4 PROBLEM
+  {u:"problem_defined",s:"Step 1: Problem Definition",b:"STEP 1",
+   abg:"linear-gradient(135deg,#667eea,#764ba2)",av:"🎯",
+   bg:"linear-gradient(135deg,#1a1a2e,#16213e 50%,#0f3460)",
+   lk:"42,891",
+   cap:`<b>problem_defined</b> The primary problem: How do you show 2 billion people exactly what they want from 95 million daily posts? Personalization at unprecedented scale. <span class="ht">#ProblemDefinition #Step1</span>`,
+   h:`<div class="slide-num">05</div>
+      <div class="icon">🎯</div>
+      <div class="title">Problem Definition</div>
+      <div class="sub">What Problem Does Instagram Solve?</div>
+      <div class="gc"><h4>The Primary Problem</h4><p><strong>User Retention & Personalization</strong> — With 95M+ posts daily, how does Instagram decide which content each user sees first to keep them engaged and coming back?</p></div>
+      <div class="gc"><h4>Sub-Problems Data Science Solves</h4>
+        <ul><li><strong>Feed Ranking</strong> — Order posts by predicted interest, not chronology</li>
+        <li><strong>Content Discovery</strong> — Surface new creators via Explore & Reels</li>
+        <li><strong>Ad Targeting</strong> — Show relevant ads without annoying users</li>
+        <li><strong>Safety</strong> — Detect harmful content, spam, and bots automatically</li></ul>
+      </div>
+      <div class="cb"><span class="cmt"># The core optimization objective</span>
+<span class="kw">maximize</span>(
+  user_engagement + content_relevance
+  + session_duration + ad_revenue
+) <span class="kw">subject_to</span>(user_wellbeing >= threshold)</div>`},
+
+  // 5 WHY DS
+  {u:"why_ds_matters",s:"Why Data Science is Critical",b:"WHY DS",
+   abg:"linear-gradient(135deg,#f7971e,#ffd200)",av:"💡",
+   bg:"linear-gradient(135deg,#0c0c1d,#1a0533 50%,#2d1b69)",
+   lk:"36,789",
+   cap:`<b>why_ds_matters</b> Without DS, Instagram shows posts chronologically. Users miss 70% of content they'd care about. Data Science IS the product. <span class="ht">#WhyDS</span>`,
+   h:`<div class="slide-num">06</div>
+      <div class="icon">💡</div>
+      <div class="title">Why Data Science?</div>
+      <div class="sub">It's Not a Feature — It IS the Product</div>
+      <div class="sg">
+        <div class="sb"><div class="n" style="color:#ffd200">70%</div><div class="l">Posts missed without ranking</div></div>
+        <div class="sb"><div class="n" style="color:#f7971e">3×</div><div class="l">More engagement with ML feed</div></div>
+        <div class="sb"><div class="n" style="color:#ff6b6b">90%</div><div class="l">Harmful content caught by AI</div></div>
+        <div class="sb"><div class="n" style="color:#48dbfb">$50B+</div><div class="l">Ad revenue powered by ML</div></div>
+      </div>
+      <div class="gc" style="margin-top:10px"><h4>Without Data Science:</h4>
+        <ul><li>A chronological photo dump (like 2010)</li>
+        <li>Unable to detect spam, bots, or abuse</li>
+        <li>Irrelevant ads with zero precision</li>
+        <li>Losing users to TikTok's superior algorithm</li></ul>
+      </div>`},
+
+  // 6 DATA COLLECTION
+  {u:"data_collector",s:"Step 2: Data Collection",b:"STEP 2",
+   abg:"linear-gradient(135deg,#f093fb,#f5576c)",av:"📊",
+   bg:"linear-gradient(135deg,#2d1b69,#11998e)",
+   lk:"38,204",
+   cap:`<b>data_collector</b> Every tap, scroll, pause, and screenshot generates a signal. Billions of events per day — each one tells the algorithm about you. <span class="ht">#DataCollection #Step2</span>`,
+   h:`<div class="slide-num">07</div>
+      <div class="icon">📊</div>
+      <div class="title">Data Collection</div>
+      <div class="sub">What Data Does Instagram Collect?</div>
+      <div class="gc"><h4>1. User Interaction Data</h4>
+        <ul><li>Likes, comments, saves, shares</li><li>Follows, unfollows, profile visits</li><li>DM shares of specific content</li><li>Story reactions & replies</li></ul>
+      </div>
+      <div class="gc"><h4>2. Content Metadata</h4>
+        <ul><li>Hashtags, captions, alt text</li><li>Image/video pixels (visual content)</li><li>Location tags, time of posting</li><li>Media type (photo, video, carousel, reel)</li></ul>
+      </div>
+      <div class="gc"><h4>3. Behavioral / Implicit Signals</h4>
+        <ul><li>Scroll speed & dwell time per post</li><li>Reel replay count & watch duration</li><li>Search queries & explore taps</li><li>Session length & time-of-day patterns</li></ul>
+      </div>`},
+
+  // 7 DATA COLLECTION DEEP DIVE
+  {u:"data_deep_dive",s:"Collection — Technical Pipeline",b:"DEEP DIVE",
+   abg:"linear-gradient(135deg,#f093fb,#f5576c)",av:"🔬",
+   bg:"linear-gradient(135deg,#1e3c72,#2a5298)",
+   lk:"27,561",
+   cap:`<b>data_deep_dive</b> Implicit signals are the most powerful. What you don't click matters as much as what you do. Slow scroll = interest. Quick skip = negative signal. <span class="ht">#ImplicitData</span>`,
+   h:`<div class="slide-num">08</div>
+      <div class="icon">🔬</div>
+      <div class="title">How Data Is Collected</div>
+      <div class="sub">The Technical Pipeline</div>
+      <div class="cb"><span class="cmt"># Every user action triggers an event</span>
+event = {
+  <span class="str">"user_id"</span>: <span class="str">"u_293847"</span>,
+  <span class="str">"action"</span>: <span class="str">"view_post"</span>,
+  <span class="str">"post_id"</span>: <span class="str">"p_847291"</span>,
+  <span class="str">"dwell_time_ms"</span>: <span class="num">4200</span>,
+  <span class="str">"scroll_velocity"</span>: <span class="num">0.3</span>,
+  <span class="str">"timestamp"</span>: <span class="str">"2025-03-31T10:42Z"</span>,
+  <span class="str">"device"</span>: <span class="str">"iPhone 15 Pro"</span>
+}
+<span class="cmt"># → Apache Kafka → real-time processing</span></div>
+      <div class="sg" style="margin-top:10px">
+        <div class="sb"><div class="n" style="color:#82aaff;font-size:26px">100K+</div><div class="l">Events per second</div></div>
+        <div class="sb"><div class="n" style="color:#c3e88d;font-size:26px">PBs</div><div class="l">Data processed daily</div></div>
+        <div class="sb"><div class="n" style="color:#c792ea;font-size:26px">&lt;50ms</div><div class="l">Ingestion latency</div></div>
+        <div class="sb"><div class="n" style="color:#f78c6c;font-size:26px">Kafka</div><div class="l">Streaming platform</div></div>
+      </div>
+      <div class="gc" style="margin-top:8px"><h4>Key: Implicit > Explicit</h4><p>A <strong>save</strong> = 5× a like. A <strong>DM share</strong> = strongest signal. Dwell time (even without liking) reveals true interest.</p></div>`},
+
+  // 8 PROCESSING
+  {u:"clean_pipeline",s:"Step 3: Data Processing",b:"STEP 3",
+   abg:"linear-gradient(135deg,#a8edea,#fed6e3)",av:"🔧",
+   bg:"linear-gradient(135deg,#0f2027,#203a43 50%,#2c5364)",
+   lk:"31,567",
+   cap:`<b>clean_pipeline</b> Garbage in, garbage out. Raw data is cleaned, normalized, and transformed. Bot removal alone filters 10%+ of engagement signals. <span class="ht">#Processing #Step3</span>`,
+   h:`<div class="slide-num">09</div>
+      <div class="icon">🔧</div>
+      <div class="title">Data Processing</div>
+      <div class="sub">Cleaning & Transforming Raw Data</div>
+      <div class="fs"><div class="fn2" style="background:linear-gradient(135deg,#ed4956,#c62828)">1</div><div class="ft"><strong>Bot & Spam Removal</strong> — ML classifiers detect fake accounts via behavioral anomaly detection</div></div>
+      <div class="fs"><div class="fn2" style="background:linear-gradient(135deg,#7cb9f7,#1e88e5)">2</div><div class="ft"><strong>Timestamp Normalization</strong> — Convert to UTC, create time-of-day & day-of-week features</div></div>
+      <div class="fs"><div class="fn2" style="background:linear-gradient(135deg,#a8edea,#26a69a)">3</div><div class="ft"><strong>Image Vectorization</strong> — Vision Transformer (ViT) → 2048-dim embedding vectors</div></div>
+      <div class="fs"><div class="fn2" style="background:linear-gradient(135deg,#c792ea,#7b1fa2)">4</div><div class="ft"><strong>NLP on Text</strong> — Tokenization, sentiment analysis, topic extraction on captions</div></div>
+      <div class="fs"><div class="fn2" style="background:linear-gradient(135deg,#fcb045,#e65100)">5</div><div class="ft"><strong>Feature Engineering</strong> — Affinity scores, freshness decay, engagement velocity</div></div>
+      <div class="cb" style="margin-top:8px;font-size:11px"><span class="kw">pipeline</span> = [
+  remove_bots(threshold=<span class="num">0.95</span>),
+  normalize_timestamps(tz=<span class="str">'UTC'</span>),
+  vectorize_images(model=<span class="str">'ViT-L/14'</span>),
+  extract_topics(method=<span class="str">'LDA'</span>, n=<span class="num">50</span>),
+  compute_affinity_scores()
+]</div>`},
+
+  // 9 EDA
+  {u:"explore_analyst",s:"Step 4: Data Analysis",b:"STEP 4",
+   abg:"linear-gradient(135deg,#ffecd2,#fcb69f)",av:"📈",
+   bg:"linear-gradient(135deg,#0c0c1d,#1a0533 50%,#2d1b69)",
+   lk:"55,342",
+   cap:`<b>explore_analyst</b> EDA reveals: Reels crush photos, saves beat likes as quality signals, 15-30s is the magic video length. <span class="ht">#EDA #Analysis #Step4</span>`,
+   h:`<div class="slide-num">10</div>
+      <div class="icon">📈</div>
+      <div class="title">Data Analysis (EDA)</div>
+      <div class="sub">Exploring Patterns in the Data</div>
+      <div class="sg">
+        <div class="sb"><div class="n" style="color:#7cb9f7">3.2×</div><div class="l">Reels vs Photos engagement</div></div>
+        <div class="sb"><div class="n" style="color:#f5576c">15-30s</div><div class="l">Optimal Reel length</div></div>
+        <div class="sb"><div class="n" style="color:#ffd700">72%</div><div class="l">Users discover via Explore</div></div>
+        <div class="sb"><div class="n" style="color:#a8edea">0.87</div><div class="l">Corr: saves ↔ quality</div></div>
+      </div>
+      <div class="gc" style="margin-top:10px"><h4>Key Findings</h4>
+        <ul><li><strong>Saves > Likes</strong> as a quality predictor</li>
+        <li><strong>Video sweet spot:</strong> 15-30 seconds maximizes completion</li>
+        <li><strong>Posting time:</strong> peaks at 6-9 PM local timezone</li>
+        <li><strong>Hashtags:</strong> 5-10 relevant > 30 random</li>
+        <li><strong>Carousels</strong> get 1.4× more reach than images</li></ul>
+      </div>`},
+
+  // 10 MODELING
+  {u:"model_engineer",s:"Step 5: Modeling",b:"STEP 5",
+   abg:"linear-gradient(135deg,#a18cd1,#fbc2eb)",av:"🧠",
+   bg:"linear-gradient(135deg,#0f0c29,#302b63 50%,#24243e)",
+   lk:"67,891",
+   cap:`<b>model_engineer</b> The recommendation engine: generate candidates → rank by P(Engage) → re-rank for diversity. Three stages, billions of parameters. <span class="ht">#Algorithm #Step5</span>`,
+   h:`<div class="slide-num">11</div>
+      <div class="icon">🧠</div>
+      <div class="title">The Algorithm</div>
+      <div class="sub">Recommendation Engine</div>
+      <div class="cb" style="font-size:12px"><span class="cmt">/* Multi-Stage Ranking Pipeline */</span>
+
+<span class="kw">Stage 1:</span> <span class="fn">Candidate Generation</span>
+  → Collaborative Filtering
+  → Content-based retrieval
+  → Social graph signals
+  → Output: ~1,500 candidates
+
+<span class="kw">Stage 2:</span> <span class="fn">Ranking (Deep NN)</span>
+  → <span class="str">f(user, item) = P(Engage)</span>
+  → Multi-task: P(like), P(save), P(share)
+  → Output: Top 50 ranked items
+
+<span class="kw">Stage 3:</span> <span class="fn">Re-ranking</span>
+  → Diversity injection
+  → Business rules & safety filters
+  → Output: Final feed order</div>
+      <div class="tags">
+        <span class="tag">Collaborative Filtering</span><span class="tag">Two-Tower Model</span>
+        <span class="tag">Transformers</span><span class="tag">GNNs</span>
+        <span class="tag">Multi-Task Learning</span><span class="tag">Embeddings</span>
+      </div>`},
+
+  // 11 MODEL DEEP DIVE
+  {u:"ml_architecture",s:"Model Architecture Details",b:"DEEP DIVE",
+   abg:"linear-gradient(135deg,#a18cd1,#fbc2eb)",av:"⚙️",
+   bg:"linear-gradient(135deg,#1a002e,#3a0066 50%,#1a0033)",
+   lk:"45,123",
+   cap:`<b>ml_architecture</b> Two-Tower architecture: encode users & items into shared embedding space. Dot product = relevance score. Retrained daily. <span class="ht">#DeepLearning #TwoTower</span>`,
+   h:`<div class="slide-num">12</div>
+      <div class="icon">⚙️</div>
+      <div class="title">Model Architecture</div>
+      <div class="sub">Two-Tower Deep Learning</div>
+      <div class="gc"><h4>🏗️ Two-Tower Architecture</h4>
+        <p><strong>User Tower:</strong> History, preferences, demographics → 256-dim embedding</p>
+        <p style="margin-top:6px"><strong>Item Tower:</strong> Image vector, caption, hashtags, stats → 256-dim embedding</p>
+        <p style="margin-top:6px"><strong>Score:</strong> Dot product = predicted engagement probability</p>
+      </div>
+      <div class="cb" style="font-size:11px;margin-top:8px"><span class="cmt"># Simplified model</span>
+<span class="kw">class</span> <span class="fn">Recommender</span>(nn.Module):
+  <span class="kw">def</span> <span class="fn">forward</span>(self, user, item):
+    u = self.user_tower(user)   <span class="cmt"># 256-d</span>
+    i = self.item_tower(item)   <span class="cmt"># 256-d</span>
+    <span class="kw">return</span> sigmoid(dot(u, i))   <span class="cmt"># P(engage)</span></div>
+      <div class="gc" style="margin-top:8px"><h4>Training at Scale</h4>
+        <ul><li><strong>Data:</strong> Billions of interactions</li>
+        <li><strong>Loss:</strong> Binary cross-entropy</li>
+        <li><strong>Refresh:</strong> Retrained daily</li>
+        <li><strong>Hardware:</strong> Custom Meta MTIA chips</li></ul>
+      </div>`},
+
+  // 12 DEPLOYMENT
+  {u:"deploy_ops",s:"Step 6: Deployment",b:"STEP 6",
+   abg:"linear-gradient(135deg,#84fab0,#8fd3f4)",av:"🚀",
+   bg:"linear-gradient(135deg,#1b4332,#2d6a4f 50%,#40916c)",
+   lk:"29,456",
+   cap:`<b>deploy_ops</b> ML at Instagram scale: A/B test on millions, serve in &lt;200ms, retrain daily, instant rollback ready. <span class="ht">#Deployment #Step6</span>`,
+   h:`<div class="slide-num">13</div>
+      <div class="icon">🚀</div>
+      <div class="title">Deployment</div>
+      <div class="sub">Shipping ML at Scale</div>
+      <div class="gc"><h4>🔄 CI/CD for ML</h4>
+        <ul><li><strong>Automated checks</strong> — accuracy, latency, fairness before deploy</li>
+        <li><strong>Canary deploys</strong> — 1% of users first, monitor metrics</li>
+        <li><strong>Instant rollback</strong> — auto-revert if any metric degrades</li></ul>
+      </div>
+      <div class="gc"><h4>🧪 A/B Testing at Scale</h4>
+        <ul><li>Rollout: 1% → 10% → 50% → 100%</li>
+        <li>Min 1M users per group for significance</li>
+        <li>2+ weeks to capture weekly patterns</li>
+        <li>Track: engagement, retention, satisfaction</li></ul>
+      </div>
+      <div class="cb" style="margin-top:6px;font-size:11px">deploy = {
+  <span class="str">"serving"</span>: <span class="str">"TF Serving + TorchServe"</span>,
+  <span class="str">"latency"</span>: <span class="str">"< 200ms p99"</span>,
+  <span class="str">"candidates"</span>: <span class="num">1500</span>,
+  <span class="str">"refresh"</span>: <span class="str">"daily"</span>,
+  <span class="str">"ab_users"</span>: <span class="num">1_000_000</span>
+}</div>`},
+
+  // 13 CHALLENGES
+  {u:"challenges_ahead",s:"Challenges & Ethics",b:"CHALLENGES",
+   abg:"linear-gradient(135deg,#ff9a9e,#fecfef)",av:"⚠️",
+   bg:"linear-gradient(135deg,#2c003e,#512b58 50%,#854442)",
+   lk:"51,203",
+   cap:`<b>challenges_ahead</b> The hardest problems aren't technical — they're ethical. Privacy, bias, and echo chambers are challenges no ML alone can solve. <span class="ht">#Ethics #Challenges</span>`,
+   h:`<div class="slide-num">14</div>
+      <div class="icon">⚠️</div>
+      <div class="title">Challenges & Ethics</div>
+      <div class="sub">The Hard Problems</div>
+      <div class="ac" style="background:rgba(237,73,86,.12);border-left:4px solid #ed4956"><h5>🔒 Data Privacy & GDPR</h5><p>User consent required. Right to be forgotten. Balancing personalization with privacy. CCPA adds further restrictions on data usage.</p></div>
+      <div class="ac" style="background:rgba(124,185,247,.12);border-left:4px solid #7cb9f7"><h5>⚖️ Algorithmic Bias</h5><p>Models amplify existing biases — favoring popular creators, certain demographics. "Rich get richer" effects that silence minority voices and niche content.</p></div>
+      <div class="ac" style="background:rgba(255,215,0,.12);border-left:4px solid #ffd700"><h5>🔄 Echo Chamber Effect</h5><p>Over-optimizing for engagement creates filter bubbles. Users only see what they already agree with. Diversity injection helps but doesn't fully solve it.</p></div>
+      <div class="ac" style="background:rgba(132,250,176,.12);border-left:4px solid #84fab0"><h5>🧠 Mental Health</h5><p>Addictive design patterns. Instagram added "Take a Break" reminders — but tension between business goals and wellbeing remains.</p></div>`},
+
+  // 14 SUMMARY
+  {u:"summary_post",s:"Full Process Recap",b:"SUMMARY",
+   abg:"linear-gradient(135deg,#667eea,#764ba2)",av:"📝",
+   bg:"linear-gradient(135deg,#0f0c29,#302b63 50%,#24243e)",
+   lk:"73,456",
+   cap:`<b>summary_post</b> The complete Data Science lifecycle in Instagram — from problem definition to ethical challenges. Every feature runs on this loop. <span class="ht">#Summary</span>`,
+   h:`<div class="slide-num">15</div>
+      <div class="icon">📝</div>
+      <div class="title">Summary</div>
+      <div class="sub">The Complete DS Process</div>
+      <div style="width:100%;max-width:360px">
+        <div class="fs"><div class="fn2" style="background:linear-gradient(135deg,#667eea,#764ba2)">1</div><div class="ft"><strong>Problem:</strong> Keep 2B+ users engaged with personalized content from 95M daily posts</div></div>
+        <div class="fs"><div class="fn2" style="background:linear-gradient(135deg,#f093fb,#f5576c)">2</div><div class="ft"><strong>Collection:</strong> Interactions, metadata, behavioral signals — billions/day via Kafka</div></div>
+        <div class="fs"><div class="fn2" style="background:linear-gradient(135deg,#a8edea,#26a69a)">3</div><div class="ft"><strong>Processing:</strong> Bot removal, normalization, ViT embeddings, NLP on captions</div></div>
+        <div class="fs"><div class="fn2" style="background:linear-gradient(135deg,#ffecd2,#e65100)">4</div><div class="ft"><strong>Analysis:</strong> Video > photos, saves > likes, 15-30s optimal, carousels win</div></div>
+        <div class="fs"><div class="fn2" style="background:linear-gradient(135deg,#a18cd1,#7b1fa2)">5</div><div class="ft"><strong>Modeling:</strong> Two-Tower DNN: f(user, item) = P(Engage), multi-task learning</div></div>
+        <div class="fs"><div class="fn2" style="background:linear-gradient(135deg,#84fab0,#2e7d32)">6</div><div class="ft"><strong>Deployment:</strong> CI/CD, A/B testing, &lt;200ms serving, daily retraining</div></div>
+        <div class="fs"><div class="fn2" style="background:linear-gradient(135deg,#ff9a9e,#c62828)">!</div><div class="ft"><strong>Challenges:</strong> Privacy, bias, echo chambers, mental health</div></div>
+      </div>`},
+
+  // 15 THANK YOU
+  {u:"datagram_official",s:"End of Presentation",b:"THE END",
+   abg:"linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)",av:"DG",
+   bg:"linear-gradient(135deg,#0f0c29,#302b63 40%,#24243e)",
+   lk:"999,999",
+   cap:`<b>datagram_official</b> Thank you for scrolling through! This entire experience was built as an Instagram UI — because when you study an app, why not <i>become</i> the app? <span class="ht">#ThankYou #FT3 #CreativePresentation</span>`,
+   h:`<div class="slide-num" style="font-size:80px;color:rgba(255,255,255,.04)">FIN</div>
+      <div class="icon" style="font-size:68px">🙏</div>
+      <div class="title" style="font-size:38px">Thank You!</div>
+      <div class="sub" style="margin-top:8px">For Scrolling Through</div>
+      <div style="margin-top:24px">
+        <div class="tc">
+          <div class="av" style="background:linear-gradient(135deg,#667eea,#764ba2)">RD</div>
+          <div class="nm">Rudraksh Dubey</div>
+          <div class="rl" style="margin-top:6px;font-weight:600">RA2311004010282</div>
+        </div>
+      </div>
+      <div class="gc" style="margin-top:24px;text-align:center"><h4>Key Takeaway</h4><p>Every feature on Instagram — Feed, Explore, Reels — is powered by Data Science. The algorithm isn't just a feature; <strong>it IS the product</strong>.</p></div>
+      <div style="margin-top:20px;font-size:11px;color:rgba(255,255,255,.3);letter-spacing:1.5px;text-align:center;font-weight:500">FT3 ACTIVITY &bull; DATA SCIENCE</div>`},
+];
+
+const N=S.length;
+let dark=false,liked=new Set();
+
+function build(){
+  const f=document.getElementById('feed');
+  f.innerHTML=S.map((s,i)=>`
+    <div class="post" data-idx="${i}" id="p${i}">
+      <div class="post-head">
+        <div class="post-av" style="background:${s.abg}">${s.av}</div>
+        <div class="post-info"><div class="post-user">${s.u}</div><div class="post-sub">${s.s}</div></div>
+        <div class="post-badge">${s.b}</div>
+      </div>
+      <div class="slide" style="background:${s.bg}" ondblclick="dbl(event,${i})">${s.h}</div>
+      <div class="post-actions">
+        <svg id="h${i}" onclick="lk(${i})" viewBox="0 0 24 24"><path d="M16.792 3.904A4.989 4.989 0 0121.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.865 3.469-4.303 3.752-.477-.309-1.834-1.543-4.303-3.752C5.141 14.072 2.5 12.167 2.5 9.122a4.989 4.989 0 014.708-5.218 4.21 4.21 0 013.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 013.679-1.938z" fill="none"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M20.656 17.008a9.993 9.993 0 10-5.7 5.7L21 24l-1.344-6.992z" fill="none"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M22 3L9.218 10.083M11.698 20.334L22 3.001H2l9.218 7.083m.48 10.25l1.674-7.542m-1.674 7.542L9.218 10.083" fill="none"/></svg>
+        <div class="sp"></div>
+        <svg viewBox="0 0 24 24"><path d="M20 21l-8-5.5L4 21V5a2 2 0 012-2h12a2 2 0 012 2v16z" fill="none"/></svg>
+      </div>
+      <div class="likes">${s.lk} likes</div>
+      <div class="caption">${s.cap}</div>
+    </div>
+    ${i<N-1?'<div class="post-divider"></div>':''}
+  `).join('');
+}
+
+// Intersection observer
+const obs=new IntersectionObserver(es=>{
+  es.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.classList.add('visible');
+      const i=+e.target.dataset.idx;
+      document.getElementById('counter').textContent=`${i+1} / ${N}`;
+      document.getElementById('progress').style.width=((i+1)/N*100)+'%';
+    }
+  });
+},{threshold:0.2});
+
+function watch(){document.querySelectorAll('.post').forEach(p=>obs.observe(p))}
+
+function lk(i){
+  const svg=document.getElementById(`h${i}`);
+  if(liked.has(i)){liked.delete(i);svg.classList.remove('liked','heart-pop');svg.querySelector('path').setAttribute('fill','none')}
+  else{liked.add(i);svg.classList.add('liked','heart-pop');svg.querySelector('path').setAttribute('fill','')}
+}
+
+function dbl(e,i){
+  if(!liked.has(i))lk(i);
+  const h=document.createElement('div');
+  h.className='dbl-heart';h.textContent='❤️';
+  const r=e.currentTarget.getBoundingClientRect();
+  h.style.left=(e.clientX-r.left-45)+'px';
+  h.style.top=(e.clientY-r.top-45)+'px';
+  e.currentTarget.appendChild(h);
+  setTimeout(()=>h.remove(),900);
+}
+
+function toggleTheme(){
+  dark=!dark;
+  document.documentElement.classList.toggle('dark',dark);
+  document.getElementById('ico-sun').style.display=dark?'block':'none';
+  document.getElementById('ico-moon').style.display=dark?'none':'block';
+}
+
+// Pulse animation for scroll hint
+const style=document.createElement('style');
+style.textContent='@keyframes pulse{0%,100%{opacity:.25}50%{opacity:.5}}';
+document.head.appendChild(style);
+
+build();watch();
+setTimeout(()=>document.getElementById('p0')?.classList.add('visible'),150);
+</script>
+</body>
+</html>
