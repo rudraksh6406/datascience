@@ -1,47 +1,38 @@
-# Opus 6.0
+# Data Science Behind Instagram
 
-An enhanced AI agent built on top of Claude. Smarter. Better.
+An interactive Instagram-style presentation exploring how the Data Science Process is applied to build and optimize Instagram's algorithm.
 
-## What makes it "6.0"?
+## About
 
-- **Deep Reasoning Engine** — thinks before it speaks, critiques its own answers, retries if not good enough
-- **Persistent Memory** — remembers across conversations
-- **Multi-Agent Orchestration** — spawns specialist sub-agents for complex tasks
-- **Self-Improvement Loop** — scores its own outputs and iterates
+This project presents the full Data Science lifecycle — problem definition, data collection, processing, analysis, modeling, deployment, and challenges — through a creative, scrollable Instagram UI built entirely in HTML/CSS/JS.
 
-## Quick Start
+**Created by:** Rudraksh Dubey (RA2311004010282)
 
-```bash
-pip install -r requirements.txt
-export ANTHROPIC_API_KEY=your-key
-python -m opus6 "your prompt here"
-```
+## Features
 
-## Architecture
+- 16 interactive slides styled as Instagram posts
+- Smooth scroll-triggered animations
+- Dark / Light mode toggle
+- Double-tap to like with heart animation
+- Glassmorphism cards, gradient backgrounds, floating particles
+- Fully responsive mobile-first design
+- Single-file — no dependencies, no build step
 
-```
-User Input
-  │
-  ▼
-┌─────────────┐
-│   Planner    │  ← breaks complex tasks into steps
-└─────┬───────┘
-      │
-      ▼
-┌─────────────┐
-│  Reasoner    │  ← deep chain-of-thought with self-critique
-└─────┬───────┘
-      │
-      ▼
-┌─────────────┐
-│  Executor    │  ← runs tools, code, searches
-└─────┬───────┘
-      │
-      ▼
-┌─────────────┐
-│   Critic     │  ← scores output, sends back if < threshold
-└─────┬───────┘
-      │
-      ▼
-   Response
-```
+## Topics Covered
+
+1. **What is Instagram?** — App overview and scale
+2. **Problem Definition** — User retention & personalization
+3. **Data Collection** — Interactions, metadata, behavioral signals
+4. **Data Processing** — Bot removal, image vectorization, NLP
+5. **Data Analysis (EDA)** — Engagement patterns and correlations
+6. **Modeling** — Two-Tower recommendation engine, collaborative filtering
+7. **Deployment** — CI/CD, A/B testing, real-time serving
+8. **Challenges** — Privacy (GDPR), algorithmic bias, echo chambers
+
+## Run Locally
+
+Just open `index.html` in any browser. No server needed.
+
+## Live Demo
+
+Deployed on Vercel.
